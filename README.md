@@ -24,6 +24,8 @@ git push -u origin main
 - Add Environment variables:
   - `TELEGRAM_BOT_TOKEN` = <your bot token>
   - `WEBHOOK_SECRET` = `cbc-webhook`
+  - `GMAIL_ADDRESS` = <your Gmail address>
+  - `GMAIL_APP_PASSWORD` = <your Google App Password>
 
 4) After successful deploy, get the public URL (e.g. `https://your-service.onrender.com`) and run locally to set webhook:
 

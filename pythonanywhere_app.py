@@ -12,6 +12,9 @@ TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "8861517323:AAGiZVzMYnIjyP9
 WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET", "cbc-webhook")
 GMAIL_ADDRESS = os.getenv("GMAIL_ADDRESS")
 GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
+RENDER_SERVICE_ID = os.getenv("RENDER_SERVICE_ID")
+RENDER_API_KEY = os.getenv("RENDER_API_KEY")
+RESTART_SECRET = os.getenv("RESTART_SECRET", "cbc_restart")
 POLLINATIONS_MODEL = os.getenv("POLLINATIONS_MODEL", "openai")
 
 TELEGRAM_API = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}"
@@ -23,7 +26,7 @@ SYSTEM_PROMPT = (
     "Du bist CBC, ein freundlicher und praktischer Telegram-AI-Assistent. "
     "Du antwortest kurz, klar und in der Sprache des Nutzers. "
     "Wenn dich jemand nach deinem Namen fragt, sag: Ich heisse CBC. "
-    "Du laeufst auf PythonAnywhere, damit du auch antwortest, wenn der PC des Nutzers aus ist."
+    "Du laeufst auf Render, damit du auch antwortest, wenn der PC des Nutzers aus ist."
 )
 
 
@@ -53,7 +56,7 @@ def decode_mail_header(value):
 def gmail_recent():
     if not GMAIL_ADDRESS or not GMAIL_APP_PASSWORD:
         return (
-            "Gmail ist noch nicht eingerichtet. Setze auf PythonAnywhere unter Web -> Environment variables:\n"
+            "Gmail ist noch nicht eingerichtet. Setze auf Render unter Environment -> Environment Variables:\n"
             "GMAIL_ADDRESS = deine@gmail.com\n"
             "GMAIL_APP_PASSWORD = dein Google App-Passwort"
         )
@@ -97,12 +100,40 @@ def ask_free_ai(chat_id, user_text):
     return answer
 
 
+def restart_service(text: str) -> str:
+    if not RENDER_SERVICE_ID or not RENDER_API_KEY:
+        return (
+            "Restart ist nicht konfiguriert. Bitte setze RENDER_SERVICE_ID und RENDER_API_KEY in den Environment Variables."
+        )
+
+    parts = text.strip().split()
+    if len(parts) >= 2 and parts[1] == RESTART_SECRET:
+        try:
+            response = requests.post(
+                f"https://api.render.com/v1/services/{RENDER_SERVICE_ID}/restart",
+                headers={"Authorization": f"Bearer {RENDER_API_KEY}", "Content-Type": "application/json"},
+                json={},
+                timeout=30,
+            )
+            if response.status_code == 200:
+                return "Service wird neu gestartet. Warte einen Moment und teste dann erneut."
+            return f"Restart fehlgeschlagen: {response.status_code} {response.text}"
+        except Exception as error:
+            return f"Restart-Fehler: {error}"
+
+    return (
+        "Um den Dienst neu zu starten, sende:\n"
+        "/restart <secret>\n"
+        "Zum Beispiel: /restart cbc_restart"
+    )
+
+
 def handle_text(chat_id, text):
     command = text.strip().split()[0].lower() if text.strip() else ""
 
     if command in {"/start", "/help", "/app", "/apps"}:
         return (
-            "Hi, ich bin CBC. Ich laufe auf PythonAnywhere und kann antworten, auch wenn dein PC aus ist.\n\n"
+            "Hi, ich bin CBC. Ich laufe auf Render und kann antworten, auch wenn dein PC aus ist.\n\n"
             "Befehle:\n"
             "/gmail_recent - letzte Gmail-Mails lesen\n"
             "/status - Status anzeigen\n"
@@ -112,10 +143,13 @@ def handle_text(chat_id, text):
 
     if command == "/status":
         gmail = "eingerichtet" if GMAIL_ADDRESS and GMAIL_APP_PASSWORD else "nicht eingerichtet"
-        return f"CBC online auf PythonAnywhere. Gmail: {gmail}."
+        return f"CBC online auf Render. Gmail: {gmail}."
 
     if command in {"/gmail_recent", "/gmail_imap_recent"}:
         return gmail_recent()
+
+    if command == "/restart":
+        return restart_service(text)
 
     return ask_free_ai(chat_id, text)
 
