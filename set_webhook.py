@@ -1,0 +1,22 @@
+﻿import os
+import sys
+
+import requests
+
+
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "8861517323:AAGiZVzMYnIjyP9wb7Rsa3x_AzHYL8FqzPk")
+WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET", "cbc-webhook")
+
+if len(sys.argv) != 2:
+    print("Benutzung: python set_webhook.py https://DEINNAME.pythonanywhere.com")
+    raise SystemExit(1)
+
+base_url = sys.argv[1].rstrip("/")
+webhook_url = f"{base_url}/webhook/{WEBHOOK_SECRET}"
+response = requests.post(
+    f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/setWebhook",
+    json={"url": webhook_url},
+    timeout=30,
+)
+print(response.json())
+print(f"Webhook gesetzt auf: {webhook_url}")
