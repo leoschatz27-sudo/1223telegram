@@ -96,18 +96,28 @@ async def apps(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(
         "App-Berechtigungen:\n"
         f"- Google/Gmail/Drive/Kalender: {google_status}\n"
-        "- Instagram/Facebook: braucht Meta-Developer-App und Freigabe\n"
-        "- Twitter/X: braucht X-Developer-Zugang/API\n\n"
-        "Kostenlose Alternative ohne Kreditkarte:\n"
+        "- Instagram/Facebook: noch nicht verbunden\n"
+        "- Twitter/X: noch nicht verbunden\n"
+        "- WhatsApp: noch nicht verbunden\n"
+        "- Discord: noch nicht verbunden\n\n"
+        "So kann CBC spaeter als Manager arbeiten:\n"
+        "1) Verbinde die App ueber das jeweilige Developer- oder Bot-System.\n"
+        "2) Setze die Zugangsdaten als Umgebungsvariablen in Render.\n"
+        "3) Anschliessend kann CBC posten, lesen oder verwalten, soweit die API es erlaubt.\n\n"
+        "Verfuegbare Setup-Befehle:\n"
         "/gmail_free_setup - Gmail per App-Passwort einrichten\n"
         "/gmail_imap_recent - letzte Gmail-Mails per IMAP lesen\n"
-        "/drive_local_recent - lokale Drive-Dateien anzeigen\n\n"
-        "Google-Cloud-OAuth, falls du spaeter willst:\n"
+        "/drive_local_recent - lokale Drive-Dateien anzeigen\n"
         "/connect_google - Google verbinden\n"
         "/google_status - Verbindung pruefen\n"
         "/gmail_recent - letzte E-Mails anzeigen\n"
         "/calendar_today - heutige Termine anzeigen\n"
-        "/drive_recent - neue Drive-Dateien anzeigen"
+        "/drive_recent - neue Drive-Dateien anzeigen\n"
+        "/connect_instagram - Instagram verbinden\n"
+        "/connect_facebook - Facebook verbinden\n"
+        "/connect_x - Twitter/X verbinden\n"
+        "/connect_whatsapp - WhatsApp verbinden\n"
+        "/connect_discord - Discord verbinden"
     )
 
 
@@ -385,10 +395,38 @@ async def connect_meta(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     )
 
 
+async def connect_instagram(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.message.reply_text(
+        "Instagram braucht eine Meta-Developer-App und Zugriffstoken. "
+        "Setze spaeter INSTAGRAM_ACCESS_TOKEN als Umgebungsvariable."
+    )
+
+
+async def connect_facebook(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.message.reply_text(
+        "Facebook braucht eine Meta-Developer-App und Page-Access-Token. "
+        "Setze spaeter FACEBOOK_ACCESS_TOKEN als Umgebungsvariable."
+    )
+
+
 async def connect_x(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(
         "Twitter/X braucht einen X-Developer-Zugang und API-Schluessel. Ohne diese "
         "Schluessel kann CBC dort nichts lesen oder posten."
+    )
+
+
+async def connect_whatsapp(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.message.reply_text(
+        "WhatsApp braucht die WhatsApp Business API oder eine offizielle Integration. "
+        "Setze spaeter WHATSAPP_API_TOKEN als Umgebungsvariable."
+    )
+
+
+async def connect_discord(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.message.reply_text(
+        "Discord braucht einen Bot-Token und Serverrechte. Setze DISCORD_BOT_TOKEN "
+        "und DISCORD_GUILD_ID als Umgebungsvariablen."
     )
 
 
@@ -483,6 +521,11 @@ async def setup_bot_commands(application: Application) -> None:
             BotCommand("gmail_recent", "Letzte E-Mails anzeigen"),
             BotCommand("calendar_today", "Heutige Termine anzeigen"),
             BotCommand("drive_recent", "Neue Drive-Dateien anzeigen"),
+            BotCommand("connect_instagram", "Instagram verbinden"),
+            BotCommand("connect_facebook", "Facebook verbinden"),
+            BotCommand("connect_x", "Twitter/X verbinden"),
+            BotCommand("connect_whatsapp", "WhatsApp verbinden"),
+            BotCommand("connect_discord", "Discord verbinden"),
         ]
     )
 
@@ -505,7 +548,11 @@ def main() -> None:
     application.add_handler(CommandHandler("calendar_today", calendar_today))
     application.add_handler(CommandHandler("drive_recent", drive_recent))
     application.add_handler(CommandHandler("connect_meta", connect_meta))
+    application.add_handler(CommandHandler("connect_instagram", connect_instagram))
+    application.add_handler(CommandHandler("connect_facebook", connect_facebook))
     application.add_handler(CommandHandler("connect_x", connect_x))
+    application.add_handler(CommandHandler("connect_whatsapp", connect_whatsapp))
+    application.add_handler(CommandHandler("connect_discord", connect_discord))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
